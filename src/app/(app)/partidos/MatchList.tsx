@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Match } from '@/lib/types'
 import TeamFlag from '@/components/TeamFlag'
+import ClosingWarning from '@/components/ClosingWarning'
 
 const STAGE_LABELS: Record<string, string> = {
   r32: '⚡ Octavos de Final',
@@ -159,6 +160,7 @@ function MatchCard({ match, userId }: { match: Match; userId: string }) {
                 <ScoreInput value={away} onChange={setAway} />
               </div>
             </div>
+            <ClosingWarning matchDate={match.match_date ?? ''} />
             <SaveButton saving={saving} saved={saved} hasPred={hasPred} onClick={save} />
           </>
         )}
