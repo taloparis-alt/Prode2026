@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Match } from '@/lib/types'
 import TeamFlag from '@/components/TeamFlag'
@@ -170,8 +171,12 @@ interface Props {
 }
 
 export default function MatchList({ groups, groupMatches, koMatches, userId }: Props) {
+  const searchParams = useSearchParams()
+  const initialGroup = searchParams.get('grupo')
+    ? `group_${searchParams.get('grupo')}`
+    : groupMatches[0] ?? ''
   const [activeTab, setActiveTab] = useState<'groups' | 'ko'>('groups')
-  const [selectedGroup, setSelectedGroup] = useState<string>(groupMatches[0] ?? '')
+  const [selectedGroup, setSelectedGroup] = useState<string>(initialGroup)
   const groupLetters = groupMatches.map(k => k.replace('group_', ''))
 
   return (

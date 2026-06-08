@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import type { Match } from '@/lib/types'
 import MatchList from './MatchList'
+import { Suspense } from 'react'
 
 export default async function PartidosPage() {
   const supabase = await createClient()
@@ -34,7 +35,9 @@ export default async function PartidosPage() {
       <div style={{ marginBottom: 12, marginTop: 4 }}>
         <h1 style={{ fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)', margin: 0 }}>📝 Pronósticos</h1>
       </div>
-      <MatchList groups={groups} groupMatches={groupMatches} koMatches={koMatches} userId={user!.id} />
+      <Suspense fallback={null}>
+        <MatchList groups={groups} groupMatches={groupMatches} koMatches={koMatches} userId={user!.id} />
+      </Suspense>
     </div>
   )
 }

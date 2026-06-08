@@ -89,7 +89,7 @@ export default async function HomePage() {
         {(upcoming ?? []).map((match: Match) => {
           const pred = predMap.get(match.id)
           return (
-            <Link key={match.id} href={`/partido/${match.id}`} style={{ textDecoration: 'none' }}>
+            <Link key={match.id} href={`/partidos?grupo=${match.group_letter}`} style={{ textDecoration: 'none' }}>
               <div style={{
                 background: 'rgba(255,255,255,0.07)', border: `1px solid ${pred ? 'rgba(56,189,248,0.4)' : 'rgba(255,255,255,0.1)'}`,
                 borderRadius: 18, overflow: 'hidden',
