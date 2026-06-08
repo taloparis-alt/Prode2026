@@ -105,10 +105,20 @@ export default async function HomePage() {
                   <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                     <TeamFlag teamId={match.home_team_id} teamName={match.home_team?.name ?? ''} size="sm" />
                   </div>
-                  <div style={{ minWidth: 60, textAlign: 'center' }}>
-                    {pred
-                      ? <span style={{ fontSize: 20, fontWeight: 900, padding: '2px 10px', borderRadius: 10, background: 'rgba(56,189,248,0.2)', border: '1px solid rgba(56,189,248,0.4)' }}>{pred.home_score}–{pred.away_score}</span>
-                      : <span style={{ fontSize: 16, fontWeight: 900, color: 'rgba(255,255,255,0.25)' }}>VS</span>}
+                  <div style={{ minWidth: 70, textAlign: 'center' }}>
+                    {pred ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.4)' }}>Mi pronóstico</span>
+                        <span style={{ fontSize: 22, fontWeight: 900, padding: '3px 12px', borderRadius: 10, background: 'rgba(56,189,248,0.2)', border: '1px solid rgba(56,189,248,0.4)', color: '#fff' }}>
+                          {pred.home_score}–{pred.away_score}
+                        </span>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <span style={{ fontSize: 16, fontWeight: 900, color: 'rgba(255,255,255,0.2)' }}>VS</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--accent2)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Pronosticar</span>
+                      </div>
+                    )}
                   </div>
                   <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                     <TeamFlag teamId={match.away_team_id} teamName={match.away_team?.name ?? ''} size="sm" />
