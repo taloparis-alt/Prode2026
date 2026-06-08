@@ -96,9 +96,10 @@ export default async function HomePage() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 14px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent3)', textTransform: 'uppercase', letterSpacing: 1 }}>Grupo {match.group_letter}</span>
-                  {pred
-                    ? <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)' }}>✓ PRONOSTICADO</span>
-                    : <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)' }}>{formatDate(match.match_date)}</span>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {pred && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)' }}>✓</span>}
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>{formatDate(match.match_date)}</span>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', gap: 8 }}>
                   <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
