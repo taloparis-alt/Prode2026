@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import type { Match } from '@/lib/types'
 import MatchList from './MatchList'
