@@ -3,13 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import type { Match } from '@/lib/types'
 import TeamFlag from '@/components/TeamFlag'
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleString('es-AR', {
-    weekday: 'short', day: 'numeric', month: 'short',
-    hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires'
-  })
-}
+import LocalTime from '@/components/LocalTime'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -98,7 +92,7 @@ export default async function HomePage() {
                   <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent3)', textTransform: 'uppercase', letterSpacing: 1 }}>Grupo {match.group_letter}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {pred && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)' }}>✓</span>}
-                    <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>{formatDate(match.match_date)}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}><LocalTime dateStr={match.match_date} /></span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', gap: 8 }}>
