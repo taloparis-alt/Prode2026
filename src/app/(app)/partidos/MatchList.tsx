@@ -1,0 +1,259 @@
+'use client'
+
+import { useState, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import type { Match } from '@/lib/types'
+import TeamFlag from '@/components/TeamFlag'
+
+const STAGE_LABELS: Record<string, string> = {
+  r32: '⚡ Octavos de Final',
+  r16: '⚡ Cuartos de Final',
+  sf: '🔥 Semifinales',
+  final: '🏆 Final',
+}
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleString('es-AR', {
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Argentina/Buenos_Aires'
+  })
+}
+
+function ScoreInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => onChange(Math.max(0, value - 1))}
+        className="w-11 h-11 rounded-2xl text-2xl font-black flex items-center justify-center active:scale-90 transition-transform"
+        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
+      >−</button>
+      <input
+        type="number" min={0} max={20} value={value}
+        onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+        className="text-center outline-none font-black"
+        style={{
+          width: 64, height: 64, fontSize: 36,
+          background: 'rgba(59,130,246,0.15)',
+          border: '2px solid rgba(59,130,246,0.5)',
+          borderRadius: 16, color: '#fff',
+        }}
+      />
+      <button
+        onClick={() => onChange(value + 1)}
+        className="w-11 h-11 rounded-2xl text-2xl font-black flex items-center justify-center active:scale-90 transition-transform"
+        style={{ background: 'rgba(59,130,246,0.5)', color: '#fff', border: '1px solid rgba(59,130,246,0.7)' }}
+      >+</button>
+    </div>
+  )
+}
+
+function SaveButton({ saving, saved, hasPred, onClick }: { saving: boolean; saved: boolean; hasPred: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick} disabled={saving}
+      className="w-full mt-5 py-4 rounded-2xl font-black text-base active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+      style={{
+        background: saved
+          ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+          : hasPred
+          ? 'linear-gradient(135deg, rgba(59,130,246,0.3), rgba(99,102,241,0.3))'
+          : 'linear-gradient(135deg, #3b82f6, #6366f1)',
+        border: saved ? '1px solid #22c55e' : hasPred ? '1px solid rgba(59,130,246,0.5)' : 'none',
+        color: '#fff',
+        boxShadow: saved ? '0 0 20px rgba(34,197,94,0.4)' : !hasPred ? '0 0 20px rgba(59,130,246,0.3)' : 'none',
+      }}
+    >
+      {saving ? '⏳ Guardando...' : saved ? '✅ ¡Guardado!' : hasPred ? '✏️ Actualizar' : '💾 Guardar pronóstico'}
+    </button>
+  )
+}
+
+function MatchCard({ match, userId }: { match: Match; userId: string }) {
+  const pred = match.user_prediction
+  const deadline = new Date(match.match_date ?? '')
+  deadline.setMinutes(deadline.getMinutes() - 30)
+  const isLocked = new Date() >= deadline || match.status === 'finished'
+
+  const [home, setHome] = useState(pred?.home_score ?? 0)
+  const [away, setAway] = useState(pred?.away_score ?? 0)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [hasPred, setHasPred] = useState(!!pred)
+
+  const save = useCallback(async () => {
+    setSaving(true)
+    const supabase = createClient()
+    await supabase.from('predictions').upsert(
+      { user_id: userId, match_id: match.id, home_score: home, away_score: away },
+      { onConflict: 'user_id,match_id' }
+    )
+    setSaving(false); setSaved(true); setHasPred(true)
+    setTimeout(() => setSaved(false), 2000)
+  }, [userId, match.id, home, away])
+
+  const points = pred?.points
+  const ptColor = points === 4 ? '#22c55e' : points === 3 ? '#f59e0b' : '#f87171'
+
+  return (
+    <div className="rounded-3xl overflow-hidden"
+      style={{
+        background: 'rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(20px)',
+        border: `1px solid ${hasPred && !isLocked ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.1)'}`,
+        boxShadow: hasPred && !isLocked ? '0 4px 24px rgba(59,130,246,0.1)' : 'none',
+      }}>
+      {/* Cabecera */}
+      <div className="flex items-center justify-between px-4 py-2.5"
+        style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          {formatDate(match.match_date ?? '')}
+        </span>
+        {match.status === 'finished' && (
+          <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: 'rgba(34,197,94,0.2)', color: '#22c55e' }}>FINALIZADO</span>
+        )}
+        {isLocked && match.status !== 'finished' && (
+          <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: 'rgba(248,113,113,0.2)', color: '#f87171' }}>🔒 CERRADO</span>
+        )}
+        {!isLocked && (
+          <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>● ABIERTO</span>
+        )}
+      </div>
+
+      <div className="px-4 py-5">
+        {match.status === 'finished' ? (
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex justify-center"><TeamFlag teamId={match.home_team_id} teamName={match.home_team?.name ?? ''} size="lg" /></div>
+            <div className="flex flex-col items-center gap-1.5 min-w-[5.5rem]">
+              <span style={{ fontSize: 36, fontWeight: 900, letterSpacing: -1 }}>{match.home_score} - {match.away_score}</span>
+              {points !== null && points !== undefined && (
+                <span className="text-sm font-black px-3 py-1 rounded-full" style={{ background: ptColor, color: '#fff' }}>+{points} pts</span>
+              )}
+              {pred && <span className="text-[10px]" style={{ color: 'var(--muted)' }}>Prono: {pred.home_score}-{pred.away_score}</span>}
+              {!pred && <span className="text-[10px]" style={{ color: '#f87171' }}>Sin pronóstico</span>}
+            </div>
+            <div className="flex-1 flex justify-center"><TeamFlag teamId={match.away_team_id} teamName={match.away_team?.name ?? ''} size="lg" /></div>
+          </div>
+        ) : isLocked ? (
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex justify-center"><TeamFlag teamId={match.home_team_id} teamName={match.home_team?.name ?? ''} size="lg" /></div>
+            <div className="flex flex-col items-center gap-2 min-w-[5rem]">
+              <span className="text-3xl">🔒</span>
+              {pred ? <span style={{ fontSize: 28, fontWeight: 900 }}>{pred.home_score} - {pred.away_score}</span>
+                    : <span className="text-xs text-center" style={{ color: '#f87171' }}>Sin pronóstico</span>}
+            </div>
+            <div className="flex-1 flex justify-center"><TeamFlag teamId={match.away_team_id} teamName={match.away_team?.name ?? ''} size="lg" /></div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-end gap-1">
+              <div className="flex-1 flex flex-col items-center gap-3">
+                <TeamFlag teamId={match.home_team_id} teamName={match.home_team?.name ?? ''} size="lg" />
+                <ScoreInput value={home} onChange={setHome} />
+              </div>
+              <div className="pb-4 px-1">
+                <span style={{ fontSize: 28, fontWeight: 900, color: 'rgba(255,255,255,0.3)' }}>–</span>
+              </div>
+              <div className="flex-1 flex flex-col items-center gap-3">
+                <TeamFlag teamId={match.away_team_id} teamName={match.away_team?.name ?? ''} size="lg" />
+                <ScoreInput value={away} onChange={setAway} />
+              </div>
+            </div>
+            <SaveButton saving={saving} saved={saved} hasPred={hasPred} onClick={save} />
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+interface Props {
+  groups: Record<string, Match[]>
+  groupMatches: string[]
+  koMatches: string[]
+  userId: string
+}
+
+export default function MatchList({ groups, groupMatches, koMatches, userId }: Props) {
+  const [activeTab, setActiveTab] = useState<'groups' | 'ko'>('groups')
+  const [selectedGroup, setSelectedGroup] = useState<string>(groupMatches[0] ?? '')
+  const groupLetters = groupMatches.map(k => k.replace('group_', ''))
+
+  return (
+    <div>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-5 p-1 rounded-2xl" style={{ background: 'rgba(0,0,0,0.25)' }}>
+        {(['groups', 'ko'] as const).map((tab, i) => (
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className="flex-1 py-3 rounded-xl text-sm font-black transition-all"
+            style={{
+              background: activeTab === tab
+                ? i === 0 ? 'linear-gradient(135deg, #3b82f6, #6366f1)' : 'linear-gradient(135deg, #f59e0b, #ef4444)'
+                : 'transparent',
+              color: activeTab === tab ? '#fff' : 'rgba(255,255,255,0.4)',
+              boxShadow: activeTab === tab ? `0 4px 14px ${i === 0 ? 'rgba(59,130,246,0.35)' : 'rgba(245,158,11,0.35)'}` : 'none',
+            }}>
+            {tab === 'groups' ? '🌎 Grupos' : '⚡ Eliminatorias'}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'groups' && (
+        <>
+          {/* Pills de grupo */}
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-5" style={{ scrollbarWidth: 'none' }}>
+            {groupLetters.map(letter => {
+              const key = `group_${letter}`
+              const open = (groups[key] ?? []).filter(m => m.status !== 'finished')
+              const done = open.filter(m => m.user_prediction).length
+              const total = open.length
+              const allDone = total > 0 && done >= total
+              const isActive = selectedGroup === key
+              return (
+                <button key={letter} onClick={() => setSelectedGroup(key)}
+                  className="flex-shrink-0 flex flex-col items-center gap-1 rounded-2xl transition-all active:scale-95"
+                  style={{
+                    minWidth: 52, padding: '10px 8px',
+                    background: isActive ? 'linear-gradient(135deg, #3b82f6, #6366f1)'
+                      : allDone ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.07)',
+                    border: isActive ? '1px solid transparent'
+                      : allDone ? '1px solid rgba(34,197,94,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: isActive ? '0 4px 16px rgba(59,130,246,0.4)' : 'none',
+                    color: isActive ? '#fff' : allDone ? '#22c55e' : 'rgba(255,255,255,0.5)',
+                  }}>
+                  <span style={{ fontSize: 18, fontWeight: 900, lineHeight: 1 }}>{letter}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700 }}>{allDone ? '✓' : `${done}/${total}`}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="space-y-4">
+            {(groups[selectedGroup] ?? []).map(m => <MatchCard key={m.id} match={m} userId={userId} />)}
+          </div>
+        </>
+      )}
+
+      {activeTab === 'ko' && (
+        <div className="space-y-6">
+          {koMatches.length === 0 ? (
+            <div className="text-center py-16" style={{ color: 'var(--muted)' }}>
+              <p style={{ fontSize: 56 }}>⏳</p>
+              <p className="font-black text-base mt-3">Se define al terminar la fase de grupos</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Del 28 de junio en adelante</p>
+            </div>
+          ) : koMatches.map(key => (
+            <section key={key}>
+              <h2 className="text-sm font-black uppercase tracking-widest mb-3" style={{ color: 'var(--accent3)' }}>
+                {STAGE_LABELS[key] ?? key}
+              </h2>
+              <div className="space-y-4">
+                {groups[key].map(m => <MatchCard key={m.id} match={m} userId={userId} />)}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
