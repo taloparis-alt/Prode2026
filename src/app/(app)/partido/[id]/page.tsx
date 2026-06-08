@@ -2,14 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import PredictionForm from './PredictionForm'
-
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr)
-  return d.toLocaleString('es-AR', {
-    weekday: 'long', day: 'numeric', month: 'long',
-    hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires'
-  })
-}
+import LocalTime from '@/components/LocalTime'
 
 export default async function PartidoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -97,7 +90,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
           </div>
 
           <p className="text-sm" style={{ color: 'var(--muted)' }}>
-            📅 {formatDate(match.match_date)}
+            📅 <LocalTime dateStr={match.match_date} format="full" />
           </p>
           {match.venue && (
             <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>📍 {match.venue}</p>

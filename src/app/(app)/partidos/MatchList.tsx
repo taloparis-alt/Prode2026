@@ -5,20 +5,13 @@ import { createClient } from '@/lib/supabase/client'
 import type { Match } from '@/lib/types'
 import TeamFlag from '@/components/TeamFlag'
 import ClosingWarning from '@/components/ClosingWarning'
+import LocalTime from '@/components/LocalTime'
 
 const STAGE_LABELS: Record<string, string> = {
   r32: '⚡ Octavos de Final',
   r16: '⚡ Cuartos de Final',
   sf: '🔥 Semifinales',
   final: '🏆 Final',
-}
-
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleString('es-AR', {
-    weekday: 'short', day: 'numeric', month: 'short',
-    hour: '2-digit', minute: '2-digit',
-    timeZone: 'America/Argentina/Buenos_Aires'
-  })
 }
 
 function ScoreInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -108,7 +101,7 @@ function MatchCard({ match, userId }: { match: Match; userId: string }) {
       <div className="flex items-center justify-between px-4 py-2.5"
         style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          {formatDate(match.match_date ?? '')}
+          <LocalTime dateStr={match.match_date ?? ''} />
         </span>
         {match.status === 'finished' && (
           <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: 'rgba(34,197,94,0.2)', color: '#22c55e' }}>FINALIZADO</span>
