@@ -19,10 +19,10 @@ function ScoreInput({ value, onChange }: { value: number; onChange: (v: number) 
   return (
     <div className="flex items-center gap-1">
       <button
-        onClick={() => onChange(Math.max(0, value - 1))}
+        onClick={() => onChange(value + 1)}
         className="rounded-xl text-xl font-black flex items-center justify-center active:scale-90 transition-transform"
-        style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }}
-      >−</button>
+        style={{ width: 36, height: 36, background: 'rgba(59,130,246,0.5)', color: '#fff', border: '1px solid rgba(59,130,246,0.7)', flexShrink: 0 }}
+      >+</button>
       <input
         type="number" min={0} max={20} value={value}
         onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
@@ -35,10 +35,10 @@ function ScoreInput({ value, onChange }: { value: number; onChange: (v: number) 
         }}
       />
       <button
-        onClick={() => onChange(value + 1)}
+        onClick={() => onChange(Math.max(0, value - 1))}
         className="rounded-xl text-xl font-black flex items-center justify-center active:scale-90 transition-transform"
-        style={{ width: 36, height: 36, background: 'rgba(59,130,246,0.5)', color: '#fff', border: '1px solid rgba(59,130,246,0.7)', flexShrink: 0 }}
-      >+</button>
+        style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }}
+      >−</button>
     </div>
   )
 }
@@ -79,11 +79,16 @@ function MatchCard({ match, userId }: { match: Match; userId: string }) {
   const save = useCallback(async () => {
     setSaving(true)
     const supabase = createClient()
-    await supabase.from('predictions').upsert(
+    const { error } = await supabase.from('predictions').upsert(
       { user_id: userId, match_id: match.id, home_score: home, away_score: away },
       { onConflict: 'user_id,match_id' }
     )
-    setSaving(false); setSaved(true); setHasPred(true)
+    setSaving(false)
+    if (error) {
+      alert('Error al guardar, intentá de nuevo')
+      return
+    }
+    setSaved(true); setHasPred(true)
     setTimeout(() => setSaved(false), 2000)
   }, [userId, match.id, home, away])
 
