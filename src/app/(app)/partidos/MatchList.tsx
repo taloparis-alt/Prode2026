@@ -64,17 +64,26 @@ function SaveButton({ saving, saved, hasPred, onClick }: { saving: boolean; save
   )
 }
 
-function MatchCard({ match, userId }: { match: Match; userId: string }) {
+interface CachedPred { home: number; away: number }
+
+function MatchCard({ match, userId, cachedPred, onSaved }: {
+  match: Match; userId: string
+  cachedPred?: CachedPred
+  onSaved: (matchId: string, home: number, away: number) => void
+}) {
   const pred = match.user_prediction
   const deadline = new Date(match.match_date ?? '')
   deadline.setMinutes(deadline.getMinutes() - 30)
   const isLocked = new Date() >= deadline || match.status === 'finished'
 
-  const [home, setHome] = useState(pred?.home_score ?? 0)
-  const [away, setAway] = useState(pred?.away_score ?? 0)
+  const initHome = cachedPred?.home ?? pred?.home_score ?? 0
+  const initAway = cachedPred?.away ?? pred?.away_score ?? 0
+
+  const [home, setHome] = useState(initHome)
+  const [away, setAway] = useState(initAway)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [hasPred, setHasPred] = useState(!!pred)
+  const [hasPred, setHasPred] = useState(!!(pred || cachedPred))
 
   const save = useCallback(async () => {
     setSaving(true)
@@ -89,8 +98,9 @@ function MatchCard({ match, userId }: { match: Match; userId: string }) {
       return
     }
     setSaved(true); setHasPred(true)
+    onSaved(match.id, home, away)
     setTimeout(() => setSaved(false), 2000)
-  }, [userId, match.id, home, away])
+  }, [userId, match.id, home, away, onSaved])
 
   const points = pred?.points
   const ptColor = points === 4 ? '#22c55e' : points === 3 ? '#f59e0b' : '#f87171'
@@ -186,6 +196,11 @@ export default function MatchList({ groups, groupMatches, koMatches, userId }: P
   const [activeTab, setActiveTab] = useState<'groups' | 'ko'>('groups')
   const [selectedGroup, setSelectedGroup] = useState<string>(initialGroup)
   const groupLetters = groupMatches.map(k => k.replace('group_', ''))
+  const [predCache, setPredCache] = useState<Record<string, CachedPred>>({})
+
+  const handleSaved = useCallback((matchId: string, home: number, away: number) => {
+    setPredCache(prev => ({ ...prev, [matchId]: { home, away } }))
+  }, [])
 
   return (
     <div>
@@ -237,7 +252,7 @@ export default function MatchList({ groups, groupMatches, koMatches, userId }: P
           </div>
 
           <div className="space-y-4">
-            {(groups[selectedGroup] ?? []).map(m => <MatchCard key={m.id} match={m} userId={userId} />)}
+            {(groups[selectedGroup] ?? []).map(m => <MatchCard key={m.id} match={m} userId={userId} cachedPred={predCache[m.id]} onSaved={handleSaved} />)}
           </div>
         </>
       )}
@@ -256,7 +271,7 @@ export default function MatchList({ groups, groupMatches, koMatches, userId }: P
                 {STAGE_LABELS[key] ?? key}
               </h2>
               <div className="space-y-4">
-                {groups[key].map(m => <MatchCard key={m.id} match={m} userId={userId} />)}
+                {groups[key].map(m => <MatchCard key={m.id} match={m} userId={userId} cachedPred={predCache[m.id]} onSaved={handleSaved} />)}
               </div>
             </section>
           ))}
