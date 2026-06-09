@@ -15,6 +15,7 @@ export default function RegistroPage() {
   const [emoji, setEmoji] = useState('⚽')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -90,16 +91,23 @@ export default function RegistroPage() {
           </div>
           <div>
             <label className="block text-sm mb-1" style={{ color: 'var(--muted)' }}>Contraseña</label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full rounded-xl px-4 py-3 text-sm outline-none"
-              style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
-              placeholder="Mínimo 6 caracteres"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                minLength={6}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full rounded-xl px-4 py-3 text-sm outline-none pr-12"
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                placeholder="Mínimo 6 caracteres"
+              />
+              <button type="button" onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg"
+                style={{ color: 'rgba(255,255,255,0.4)', lineHeight: 1 }}>
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
           </div>
 
           {error && <p className="text-sm text-center" style={{ color: 'var(--accent2)' }}>{error}</p>}

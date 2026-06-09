@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -60,12 +61,19 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--muted)' }}>Contraseña</label>
-              <input
-                type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-2xl px-4 py-4 text-base outline-none"
-                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                  className="w-full rounded-2xl px-4 py-4 text-base outline-none pr-12"
+                  style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}
+                  placeholder="••••••••"
+                />
+                <button type="button" onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xl"
+                  style={{ color: 'rgba(255,255,255,0.4)', lineHeight: 1 }}>
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
 
             {error && (
