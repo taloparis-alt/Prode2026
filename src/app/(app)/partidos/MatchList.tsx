@@ -134,13 +134,20 @@ function MatchCard({ match, userId, cachedPred, onSaved }: {
         {match.status === 'finished' ? (
           <div className="flex items-center gap-2">
             <div className="flex-1 flex justify-center"><TeamFlag teamId={match.home_team_id} teamName={match.home_team?.name ?? ''} size="lg" /></div>
-            <div className="flex flex-col items-center gap-1.5 min-w-[5.5rem]">
+            <div className="flex flex-col items-center gap-1 min-w-[5.5rem]">
+              <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.4)' }}>Resultado</span>
               <span style={{ fontSize: 36, fontWeight: 900, letterSpacing: -1 }}>{match.home_score} - {match.away_score}</span>
               {points !== null && points !== undefined && (
                 <span className="text-sm font-black px-3 py-1 rounded-full" style={{ background: ptColor, color: '#fff' }}>+{points} pts</span>
               )}
-              {pred && <span className="text-[10px]" style={{ color: 'var(--muted)' }}>Prono: {pred.home_score}-{pred.away_score}</span>}
-              {!pred && <span className="text-[10px]" style={{ color: '#f87171' }}>Sin pronóstico</span>}
+              {pred ? (
+                <div style={{ marginTop: 4, padding: '4px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'center' }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block' }}>Mi pronóstico</span>
+                  <span style={{ fontSize: 18, fontWeight: 900, color: 'rgba(255,255,255,0.7)' }}>{pred.home_score} - {pred.away_score}</span>
+                </div>
+              ) : (
+                <span className="text-[10px]" style={{ color: '#f87171', marginTop: 4 }}>Sin pronóstico</span>
+              )}
             </div>
             <div className="flex-1 flex justify-center"><TeamFlag teamId={match.away_team_id} teamName={match.away_team?.name ?? ''} size="lg" /></div>
           </div>
