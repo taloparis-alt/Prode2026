@@ -14,11 +14,27 @@ function UnirseForms() {
 
   useEffect(() => {
     const c = searchParams.get('codigo')
-    if (c) {
-      setCode(c.toUpperCase())
-      // Auto-unirse si viene con código
-      handleJoin(c.toUpperCase())
-    }
+    if (!c) return
+    setCode(c.toUpperCase())
+
+    // Esperar a que la sesión esté lista antes de unirse
+    const supabase = createClient()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        subscription.unsubscribe()
+        handleJoin(c.toUpperCase())
+      }
+    })
+
+    // También intentar inmediatamente por si ya hay sesión
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        subscription.unsubscribe()
+        handleJoin(c.toUpperCase())
+      }
+    })
+
+    return () => subscription.unsubscribe()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
