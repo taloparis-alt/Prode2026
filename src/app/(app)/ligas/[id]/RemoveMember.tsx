@@ -12,8 +12,13 @@ export default function RemoveMember({ leagueId, userId, name }: { leagueId: str
   async function handleRemove() {
     setLoading(true)
     const supabase = createClient()
-    await supabase.from('league_members').delete().eq('league_id', leagueId).eq('user_id', userId)
+    const { error } = await supabase.from('league_members').delete().eq('league_id', leagueId).eq('user_id', userId)
     setLoading(false)
+    if (error) {
+      alert('Error: ' + error.message)
+      setConfirming(false)
+      return
+    }
     setConfirming(false)
     router.refresh()
   }
