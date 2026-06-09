@@ -20,7 +20,7 @@ export default function RemoveMember({ leagueId, userId, name }: { leagueId: str
       return
     }
     setConfirming(false)
-    router.refresh()
+    window.location.reload()
   }
 
   if (confirming) {
