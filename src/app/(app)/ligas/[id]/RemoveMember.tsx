@@ -11,6 +11,7 @@ export default function RemoveMember({ leagueId, userId, name }: { leagueId: str
 
   async function handleRemove() {
     setLoading(true)
+    alert(`Borrando: liga=${leagueId} user=${userId}`)
     const supabase = createClient()
     const { error } = await supabase.from('league_members').delete().eq('league_id', leagueId).eq('user_id', userId)
     setLoading(false)
