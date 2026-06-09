@@ -8,10 +8,8 @@ export default function RemoveMember({ leagueId, userId, name }: { leagueId: str
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ leagueId, userId }),
     })
-    const data = await res.json()
-    alert('Respuesta: ' + JSON.stringify(data) + ' status:' + res.status)
-    if (!res.ok) return
-    window.location.reload()
+    if (res.ok) window.location.reload()
+    else alert('Error al eliminar')
   }
 
   return (
