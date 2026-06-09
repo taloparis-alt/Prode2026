@@ -18,19 +18,13 @@ export default async function PerfilPage() {
   const correct = (predictions ?? []).filter((p: { points: number }) => p.points === 3).length
   const played = (predictions ?? []).length
 
-  // Ligas del usuario
-  const { data: memberships } = await supabase
-    .from('league_members').select('league_id, leagues(id, name)').eq('user_id', user.id)
-  const leagues = (memberships ?? []).map((m: { leagues: unknown }) => m.leagues).filter(Boolean) as { id: string; name: string }[]
-
   // Equipos para el selector
   const { data: teams } = await supabase
     .from('teams').select('*').neq('id', 'TBD').order('group_letter').order('name')
 
-  // Pronósticos de campeón guardados
-  const { data: champPreds } = await supabase
-    .from('champion_predictions').select('*').eq('user_id', user.id)
-  const champMap = new Map((champPreds ?? []).map((p: { league_id: string; team_id: string }) => [p.league_id, p.team_id]))
+  // Candidato a campeón global
+  const { data: champPick } = await supabase
+    .from('user_champion_picks').select('team_id').eq('user_id', user.id).single()
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-4 pb-4">
@@ -62,9 +56,8 @@ export default async function PerfilPage() {
       {/* Sección campeón */}
       <ChampionSection
         userId={user.id}
-        leagues={leagues}
         teams={teams ?? []}
-        champMap={Object.fromEntries(champMap)}
+        existingTeamId={champPick?.team_id ?? null}
       />
 
       <div className="mt-6">
