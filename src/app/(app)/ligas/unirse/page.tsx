@@ -14,8 +14,22 @@ function UnirseForms() {
 
   useEffect(() => {
     const c = searchParams.get('codigo')
-    if (c) setCode(c.toUpperCase())
-  }, [searchParams])
+    if (!c) return
+    setCode(c.toUpperCase())
+
+    // Si ya es miembro, ir directo a la liga
+    async function checkMembership() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: league } = await supabase.from('leagues').select('id').eq('code', c.toUpperCase()).single()
+      if (!league) return
+      const { data: member } = await supabase.from('league_members')
+        .select('user_id').eq('league_id', league.id).eq('user_id', user.id).single()
+      if (member) router.replace(`/ligas/${league.id}`)
+    }
+    checkMembership()
+  }, [searchParams, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
