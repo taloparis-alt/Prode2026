@@ -17,27 +17,27 @@ const STAGE_LABELS: Record<string, string> = {
 
 function ScoreInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <button
         onClick={() => onChange(Math.max(0, value - 1))}
-        className="w-11 h-11 rounded-2xl text-2xl font-black flex items-center justify-center active:scale-90 transition-transform"
-        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}
+        className="rounded-xl text-xl font-black flex items-center justify-center active:scale-90 transition-transform"
+        style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }}
       >−</button>
       <input
         type="number" min={0} max={20} value={value}
         onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
         className="text-center outline-none font-black"
         style={{
-          width: 64, height: 64, fontSize: 36,
+          width: 48, height: 52, fontSize: 28,
           background: 'rgba(59,130,246,0.15)',
           border: '2px solid rgba(59,130,246,0.5)',
-          borderRadius: 16, color: '#fff',
+          borderRadius: 12, color: '#fff', flexShrink: 0,
         }}
       />
       <button
         onClick={() => onChange(value + 1)}
-        className="w-11 h-11 rounded-2xl text-2xl font-black flex items-center justify-center active:scale-90 transition-transform"
-        style={{ background: 'rgba(59,130,246,0.5)', color: '#fff', border: '1px solid rgba(59,130,246,0.7)' }}
+        className="rounded-xl text-xl font-black flex items-center justify-center active:scale-90 transition-transform"
+        style={{ width: 36, height: 36, background: 'rgba(59,130,246,0.5)', color: '#fff', border: '1px solid rgba(59,130,246,0.7)', flexShrink: 0 }}
       >+</button>
     </div>
   )
@@ -141,18 +141,21 @@ function MatchCard({ match, userId }: { match: Match; userId: string }) {
           </div>
         ) : (
           <>
-            <div className="flex items-end gap-1">
-              <div className="flex-1 flex flex-col items-center gap-3">
+            {/* Banderas arriba */}
+            <div className="flex items-center justify-around mb-3">
+              <div className="flex-1 flex justify-center">
                 <TeamFlag teamId={match.home_team_id} teamName={match.home_team?.name ?? ''} size="lg" />
-                <ScoreInput value={home} onChange={setHome} />
               </div>
-              <div className="pb-4 px-1">
-                <span style={{ fontSize: 28, fontWeight: 900, color: 'rgba(255,255,255,0.3)' }}>–</span>
-              </div>
-              <div className="flex-1 flex flex-col items-center gap-3">
+              <span style={{ fontSize: 20, fontWeight: 900, color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>VS</span>
+              <div className="flex-1 flex justify-center">
                 <TeamFlag teamId={match.away_team_id} teamName={match.away_team?.name ?? ''} size="lg" />
-                <ScoreInput value={away} onChange={setAway} />
               </div>
+            </div>
+            {/* Inputs abajo centrados */}
+            <div className="flex items-center justify-center gap-3">
+              <ScoreInput value={home} onChange={setHome} />
+              <span style={{ fontSize: 22, fontWeight: 900, color: 'rgba(255,255,255,0.3)' }}>–</span>
+              <ScoreInput value={away} onChange={setAway} />
             </div>
             <ClosingWarning matchDate={match.match_date ?? ''} />
             <SaveButton saving={saving} saved={saved} hasPred={hasPred} onClick={save} />
