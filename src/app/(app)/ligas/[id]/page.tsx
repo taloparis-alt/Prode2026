@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import type { LeagueStanding } from '@/lib/types'
 import ShareButton from './ShareButton'
+import RemoveMember from './RemoveMember'
 
 const medals = ['🥇', '🥈', '🥉']
 
@@ -72,11 +73,16 @@ export default async function LigaPage({ params }: { params: Promise<{ id: strin
                     🎯 {s.exact_scores} exactos · ✓ {s.correct_results} resultados
                   </p>
                 </div>
-                <div className="text-right">
-                  <span style={{ fontSize: 24, fontWeight: 900, color: isTop3 ? 'var(--accent3)' : '#fff' }}>
-                    {s.total_points}
-                  </span>
-                  <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>pts</p>
+                <div className="text-right flex items-center gap-2">
+                  <div>
+                    <span style={{ fontSize: 24, fontWeight: 900, color: isTop3 ? 'var(--accent3)' : '#fff' }}>
+                      {s.total_points}
+                    </span>
+                    <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>pts</p>
+                  </div>
+                  {league.created_by === user!.id && !isMe && (
+                    <RemoveMember leagueId={id} userId={s.user_id} name={s.display_name} />
+                  )}
                 </div>
               </div>
             )
