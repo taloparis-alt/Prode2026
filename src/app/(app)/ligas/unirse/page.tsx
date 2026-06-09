@@ -17,24 +17,19 @@ function UnirseForms() {
     if (!c) return
     setCode(c.toUpperCase())
 
-    // Esperar a que la sesión esté lista antes de unirse
-    const supabase = createClient()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        subscription.unsubscribe()
-        handleJoin(c.toUpperCase())
-      }
-    })
-
-    // También intentar inmediatamente por si ya hay sesión
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    // Reintentar hasta 5 veces esperando que la sesión esté lista
+    let attempts = 0
+    async function tryJoin() {
+      attempts++
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        subscription.unsubscribe()
-        handleJoin(c.toUpperCase())
+        handleJoin(c!.toUpperCase())
+      } else if (attempts < 5) {
+        setTimeout(tryJoin, 800)
       }
-    })
-
-    return () => subscription.unsubscribe()
+    }
+    setTimeout(tryJoin, 300)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
