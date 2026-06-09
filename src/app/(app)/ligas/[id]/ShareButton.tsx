@@ -6,7 +6,7 @@ export default function ShareButton({ code }: { code: string }) {
   const [state, setState] = useState<'idle' | 'copied' | 'shared'>('idle')
 
   async function handleShare() {
-    const url = `https://prode2026-neon.vercel.app/ligas/unirse?codigo=${code}`
+    const url = `https://prode2026-neon.vercel.app/api/join?codigo=${code}`
     const text = `¡Unite a mi liga del Prode Mundial 2026! Usá el código ${code} o entrá directo: ${url}`
 
     if (navigator.share) {
