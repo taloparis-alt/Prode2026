@@ -1,26 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 
-export default function RemoveMember({ leagueId, userId, name }: { leagueId: string; userId: string; name: string }) {
+interface Props {
+  leagueId: string
+  userId: string
+  name: string
+}
+
+export default function RemoveMember({ leagueId, userId, name }: Props) {
   const [confirming, setConfirming] = useState(false)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   async function handleRemove() {
     setLoading(true)
-    alert(`Borrando: liga=${leagueId} user=${userId}`)
-    const supabase = createClient()
-    const { error } = await supabase.from('league_members').delete().eq('league_id', leagueId).eq('user_id', userId)
-    setLoading(false)
-    if (error) {
-      alert('Error: ' + error.message)
+    const res = await fetch('/api/remove-member', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ leagueId, userId }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert('Error: ' + data.error)
+      setLoading(false)
       setConfirming(false)
       return
     }
-    setConfirming(false)
     window.location.reload()
   }
 
