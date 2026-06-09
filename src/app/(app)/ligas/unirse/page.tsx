@@ -14,37 +14,17 @@ function UnirseForms() {
 
   useEffect(() => {
     const c = searchParams.get('codigo')
-    if (!c) return
-    setCode(c.toUpperCase())
+    if (c) setCode(c.toUpperCase())
+  }, [searchParams])
 
-    // Esperar 1.5s para que el trigger de perfil termine, luego reintentar hasta 5 veces
-    let attempts = 0
-    async function tryJoin() {
-      attempts++
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { error } = await supabase.from('league_members').select('user_id').eq('user_id', user.id).limit(1).maybeSingle()
-        // Si profiles ya existe (no FK error), unirse
-        if (!error || error.code !== '23503') {
-          handleJoin(c!.toUpperCase())
-          return
-        }
-      }
-      if (attempts < 8) setTimeout(tryJoin, 800)
-    }
-    setTimeout(tryJoin, 1500)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  async function handleJoin(codeToUse: string) {
-    if (!codeToUse || codeToUse.length < 6) return
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
     setLoading(true); setError('')
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
+    if (!user) { setError('Tenés que iniciar sesión'); setLoading(false); return }
 
-    const { data: league } = await supabase.from('leagues').select('id').eq('code', codeToUse).single()
+    const { data: league } = await supabase.from('leagues').select('id').eq('code', code.toUpperCase()).single()
     if (!league) { setError('Código inválido'); setLoading(false); return }
 
     const { error: err } = await supabase.from('league_members').insert({ league_id: league.id, user_id: user.id })
@@ -53,49 +33,35 @@ function UnirseForms() {
     router.push(`/ligas/${league.id}`)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    handleJoin(code)
-  }
-
   return (
     <div className="max-w-sm mx-auto px-4 pt-12">
       <div className="text-center mb-8">
         <span style={{ fontSize: 64 }}>🔗</span>
         <h1 className="text-2xl font-black mt-3">Unirse a una liga</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>
-          {loading ? 'Uniéndote a la liga...' : 'Ingresá el código que te compartieron'}
-        </p>
+        <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Ingresá el código que te compartieron</p>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8" style={{ color: 'var(--muted)' }}>
-          <div style={{ fontSize: 48 }}>⏳</div>
-          <p className="mt-3 font-black">Uniéndote...</p>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            required value={code} onChange={e => setCode(e.target.value.toUpperCase())}
-            maxLength={6}
-            className="w-full rounded-2xl text-center font-black outline-none tracking-widest"
-            style={{
-              padding: '20px 16px', fontSize: 32,
-              background: 'rgba(255,255,255,0.07)', border: '2px solid rgba(255,255,255,0.15)', color: '#fff',
-              letterSpacing: 8,
-            }}
-            placeholder="ABC123"
-          />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          required value={code} onChange={e => setCode(e.target.value.toUpperCase())}
+          maxLength={6}
+          className="w-full rounded-2xl text-center font-black outline-none tracking-widest"
+          style={{
+            padding: '20px 16px', fontSize: 32,
+            background: 'rgba(255,255,255,0.07)', border: '2px solid rgba(255,255,255,0.15)', color: '#fff',
+            letterSpacing: 8,
+          }}
+          placeholder="ABC123"
+        />
 
-          {error && <p className="text-sm text-center py-2 rounded-xl" style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>{error}</p>}
+        {error && <p className="text-sm text-center py-2 rounded-xl" style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>{error}</p>}
 
-          <button type="submit" disabled={loading || code.length < 6}
-            className="w-full py-4 rounded-2xl font-black text-lg active:scale-95 transition-all disabled:opacity-40"
-            style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: '#fff', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
-            Unirse
-          </button>
-        </form>
-      )}
+        <button type="submit" disabled={loading || code.length < 6}
+          className="w-full py-4 rounded-2xl font-black text-lg active:scale-95 transition-all disabled:opacity-40"
+          style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)', color: '#fff', boxShadow: '0 4px 20px rgba(59,130,246,0.35)' }}>
+          {loading ? 'Uniéndote...' : '🔗 Unirse a la liga'}
+        </button>
+      </form>
     </div>
   )
 }
