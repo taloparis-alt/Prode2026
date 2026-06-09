@@ -22,7 +22,7 @@ function UnirseForms() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { data: league } = await supabase.from('leagues').select('id').eq('code', c.toUpperCase()).single()
+      const { data: league } = await supabase.from('leagues').select('id').eq('code', (c as string).toUpperCase()).single()
       if (!league) return
       const { data: member } = await supabase.from('league_members')
         .select('user_id').eq('league_id', league.id).eq('user_id', user.id).single()
