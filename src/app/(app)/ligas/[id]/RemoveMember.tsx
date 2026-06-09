@@ -9,10 +9,8 @@ export default function RemoveMember({ leagueId, userId, name }: { leagueId: str
       body: JSON.stringify({ leagueId, userId }),
     })
     const data = await res.json()
-    if (!res.ok) {
-      alert('Error: ' + data.error)
-      return
-    }
+    alert('Respuesta: ' + JSON.stringify(data) + ' status:' + res.status)
+    if (!res.ok) return
     window.location.reload()
   }
 
