@@ -27,7 +27,8 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/registro') ||
     request.nextUrl.pathname.startsWith('/recuperar') ||
     request.nextUrl.pathname.startsWith('/nueva-contrasena') ||
-    request.nextUrl.pathname.startsWith('/api/join')
+    request.nextUrl.pathname.startsWith('/api/join') ||
+    request.nextUrl.pathname.startsWith('/api/admin')
 
   if (!user && !isAuthPage) {
     const redirectTo = request.nextUrl.pathname + request.nextUrl.search
