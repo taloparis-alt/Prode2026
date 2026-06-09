@@ -17,19 +17,23 @@ function UnirseForms() {
     if (!c) return
     setCode(c.toUpperCase())
 
-    // Reintentar hasta 5 veces esperando que la sesión esté lista
+    // Esperar 1.5s para que el trigger de perfil termine, luego reintentar hasta 5 veces
     let attempts = 0
     async function tryJoin() {
       attempts++
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        handleJoin(c!.toUpperCase())
-      } else if (attempts < 5) {
-        setTimeout(tryJoin, 800)
+        const { error } = await supabase.from('league_members').select('user_id').eq('user_id', user.id).limit(1).maybeSingle()
+        // Si profiles ya existe (no FK error), unirse
+        if (!error || error.code !== '23503') {
+          handleJoin(c!.toUpperCase())
+          return
+        }
       }
+      if (attempts < 8) setTimeout(tryJoin, 800)
     }
-    setTimeout(tryJoin, 300)
+    setTimeout(tryJoin, 1500)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
