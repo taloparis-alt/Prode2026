@@ -6,18 +6,24 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-  // Verificar que el que pide es el creador de la liga
-  const { data: league } = await supabase
+  // Usar service role para bypassear RLS
+  const { createClient: createAdmin } = await import('@supabase/supabase-js')
+  const admin = createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  // Verificar que el usuario es creador
+  const { data: league } = await admin
     .from('leagues').select('created_by').eq('id', leagueId).single()
 
   if (!league || league.created_by !== user.id) {
-    return NextResponse.json({ error: 'No sos el creador de esta liga' }, { status: 403 })
+    return NextResponse.json({ error: `No autorizado. creator=${league?.created_by} user=${user.id}` }, { status: 403 })
   }
 
-  const { error } = await supabase
+  const { error } = await admin
     .from('league_members')
     .delete()
     .eq('league_id', leagueId)
