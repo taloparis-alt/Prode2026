@@ -29,7 +29,10 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/nueva-contrasena')
 
   if (!user && !isAuthPage) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    const redirectTo = request.nextUrl.pathname + request.nextUrl.search
+    const loginUrl = new URL('/registro', request.url)
+    loginUrl.searchParams.set('redirect', redirectTo)
+    return NextResponse.redirect(loginUrl)
   }
 
   if (user && isAuthPage) {

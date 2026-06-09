@@ -5,8 +5,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
+
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') ?? '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -23,7 +28,7 @@ export default function LoginPage() {
       setError('Email o contraseña incorrectos')
       setLoading(false)
     } else {
-      router.push('/')
+      router.push(redirectTo)
       router.refresh()
     }
   }
@@ -98,11 +103,19 @@ export default function LoginPage() {
 
         <p className="text-center text-base mt-6" style={{ color: 'var(--muted)' }}>
           ¿No tenés cuenta?{' '}
-          <Link href="/registro" className="font-black text-white">
+          <Link href={`/registro?redirect=${encodeURIComponent(redirectTo)}`} className="font-black text-white">
             Registrate
           </Link>
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   )
 }

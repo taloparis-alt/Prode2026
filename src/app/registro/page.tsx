@@ -1,14 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { Suspense } from 'react'
 
 const EMOJIS = ['⚽','🏆','🥇','🔥','⚡','🌟','🦁','🦅','🐯','🦊','🐺','🦈']
 
-export default function RegistroPage() {
+function RegistroForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') ?? '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -31,7 +34,7 @@ export default function RegistroPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/')
+      router.push(redirectTo)
       router.refresh()
     }
   }
@@ -124,11 +127,19 @@ export default function RegistroPage() {
 
         <p className="text-center text-sm mt-6" style={{ color: 'var(--muted)' }}>
           ¿Ya tenés cuenta?{' '}
-          <Link href="/login" className="font-semibold" style={{ color: 'var(--accent)' }}>
+          <Link href={`/login?redirect=${encodeURIComponent(redirectTo)}`} className="font-semibold" style={{ color: 'var(--accent)' }}>
             Iniciá sesión
           </Link>
         </p>
       </div>
     </div>
+  )
+}
+
+export default function RegistroPage() {
+  return (
+    <Suspense>
+      <RegistroForm />
+    </Suspense>
   )
 }
