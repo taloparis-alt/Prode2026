@@ -293,36 +293,6 @@ export default function MatchList({ groups, groupMatches, koMatches, userId }: P
         </div>
       )}
 
-      {/* Próximos partidos — al final, excluyendo el grupo/sección ya visible */}
-      {(() => {
-        const visibleIds = new Set(
-          activeTab === 'groups'
-            ? (groups[selectedGroup] ?? []).map(m => m.id)
-            : koMatches.flatMap(k => (groups[k] ?? []).map(m => m.id))
-        )
-        const list = upcomingMatches.filter(m => !visibleIds.has(m.id))
-        if (list.length === 0) return null
-        return (
-          <div className="mt-8">
-            <h2 className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              📅 Próximos partidos
-            </h2>
-            <div className="space-y-4">
-              {list.slice(0, visibleUpcoming).map(m => (
-                <MatchCard key={m.id} match={m} userId={userId} cachedPred={predCache[m.id]} onSaved={handleSaved} />
-              ))}
-            </div>
-            {visibleUpcoming < list.length && (
-              <button
-                onClick={() => setVisibleUpcoming(v => v + 5)}
-                className="w-full mt-4 py-3 rounded-2xl font-black text-sm active:scale-95 transition-all"
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)' }}>
-                Ver más ({list.length - visibleUpcoming} restantes)
-              </button>
-            )}
-          </div>
-        )
-      })()}
     </div>
   )
 }

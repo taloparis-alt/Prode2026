@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import type { Match } from '@/lib/types'
 import TeamFlag from '@/components/TeamFlag'
-import LocalTime from '@/components/LocalTime'
+import UpcomingList from './UpcomingList'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -14,14 +14,12 @@ export default async function HomePage() {
     .from('matches')
     .select('*, home_team:teams!home_team_id(*), away_team:teams!away_team_id(*)')
     .eq('status', 'scheduled').neq('home_team_id', 'TBD')
-    .order('match_date', { ascending: true }).limit(6)
+    .order('match_date', { ascending: true })
 
   const matchIds = (upcoming ?? []).map((m: Match) => m.id)
   const { data: predictions } = matchIds.length > 0
     ? await supabase.from('predictions').select('*').eq('user_id', user!.id).in('match_id', matchIds)
     : { data: [] }
-
-  const predMap = new Map((predictions ?? []).map((p: { match_id: string; home_score: number; away_score: number }) => [p.match_id, p]))
 
   const { data: finished } = await supabase
     .from('matches')
@@ -79,50 +77,7 @@ export default async function HomePage() {
         </Link>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-        {(upcoming ?? []).map((match: Match) => {
-          const pred = predMap.get(match.id)
-          return (
-            <Link key={match.id} href={`/partidos?grupo=${match.group_letter}`} style={{ textDecoration: 'none' }}>
-              <div style={{
-                background: 'rgba(255,255,255,0.07)', border: `1px solid ${pred ? 'rgba(56,189,248,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                borderRadius: 18, overflow: 'hidden',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 14px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent3)', textTransform: 'uppercase', letterSpacing: 1 }}>Grupo {match.group_letter}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {pred && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)' }}>✓</span>}
-                    <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}><LocalTime dateStr={match.match_date} /></span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', gap: 8 }}>
-                  <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                    <TeamFlag teamId={match.home_team_id} teamName={match.home_team?.name ?? ''} size="sm" />
-                  </div>
-                  <div style={{ minWidth: 70, textAlign: 'center' }}>
-                    {pred ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                        <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.4)' }}>Mi pronóstico</span>
-                        <span style={{ fontSize: 22, fontWeight: 900, padding: '3px 12px', borderRadius: 10, background: 'rgba(56,189,248,0.2)', border: '1px solid rgba(56,189,248,0.4)', color: '#fff' }}>
-                          {pred.home_score}–{pred.away_score}
-                        </span>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                        <span style={{ fontSize: 16, fontWeight: 900, color: 'rgba(255,255,255,0.2)' }}>VS</span>
-                        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--accent2)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Pronosticar</span>
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                    <TeamFlag teamId={match.away_team_id} teamName={match.away_team?.name ?? ''} size="sm" />
-                  </div>
-                </div>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
+      <UpcomingList matches={upcoming ?? []} predictions={predictions ?? []} />
 
       {/* ÚLTIMOS RESULTADOS */}
       {(finished ?? []).length > 0 && (
