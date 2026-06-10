@@ -10,6 +10,9 @@ export default async function PerfilPage() {
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
 
+  const { data: allPredictions } = await supabase
+    .from('predictions').select('id').eq('user_id', user.id)
+
   const { data: predictions } = await supabase
     .from('predictions').select('points').eq('user_id', user.id).not('points', 'is', null)
 
@@ -25,7 +28,7 @@ export default async function PerfilPage() {
   const totalPts = (predictions ?? []).reduce((s: number, p: { points: number }) => s + (p.points ?? 0), 0) + champPts
   const exact = (predictions ?? []).filter((p: { points: number }) => p.points === 4).length
   const correct = (predictions ?? []).filter((p: { points: number }) => p.points === 3).length
-  const played = (predictions ?? []).length
+  const played = (allPredictions ?? []).length
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-4 pb-4">

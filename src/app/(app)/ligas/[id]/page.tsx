@@ -18,6 +18,7 @@ export default async function LigaPage({ params }: { params: Promise<{ id: strin
   const { data: standings } = await supabase
     .from('league_standings').select('*').eq('league_id', id)
     .order('total_points', { ascending: false })
+    .order('exact_scores', { ascending: false })
 
   const sorted = (standings ?? []) as LeagueStanding[]
 
