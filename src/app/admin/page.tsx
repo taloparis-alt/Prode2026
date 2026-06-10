@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import AdminMatchList from './AdminMatchList'
+import AdminChampion from './AdminChampion'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -17,6 +18,12 @@ export default async function AdminPage() {
     .neq('home_team_id', 'TBD')
     .order('sort_order', { ascending: true })
 
+  const { data: teams } = await supabase
+    .from('teams')
+    .select('id, name')
+    .neq('id', 'TBD')
+    .order('name')
+
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: '16px' }}>
       <div style={{ marginBottom: 20, padding: '16px 20px', borderRadius: 16, background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)' }}>
@@ -27,6 +34,7 @@ export default async function AdminPage() {
           Cargá resultados y se calculan los puntos automáticamente
         </p>
       </div>
+      <AdminChampion teams={teams ?? []} />
       <AdminMatchList matches={matches ?? []} />
     </div>
   )

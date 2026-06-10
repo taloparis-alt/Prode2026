@@ -13,18 +13,19 @@ export default async function PerfilPage() {
   const { data: predictions } = await supabase
     .from('predictions').select('points').eq('user_id', user.id).not('points', 'is', null)
 
-  const totalPts = (predictions ?? []).reduce((s: number, p: { points: number }) => s + (p.points ?? 0), 0)
-  const exact = (predictions ?? []).filter((p: { points: number }) => p.points === 4).length
-  const correct = (predictions ?? []).filter((p: { points: number }) => p.points === 3).length
-  const played = (predictions ?? []).length
-
   // Equipos para el selector
   const { data: teams } = await supabase
     .from('teams').select('*').neq('id', 'TBD').order('group_letter').order('name')
 
   // Candidato a campeón global
   const { data: champPick } = await supabase
-    .from('user_champion_picks').select('team_id').eq('user_id', user.id).single()
+    .from('user_champion_picks').select('team_id, points').eq('user_id', user.id).single()
+
+  const champPts = champPick?.points ?? 0
+  const totalPts = (predictions ?? []).reduce((s: number, p: { points: number }) => s + (p.points ?? 0), 0) + champPts
+  const exact = (predictions ?? []).filter((p: { points: number }) => p.points === 4).length
+  const correct = (predictions ?? []).filter((p: { points: number }) => p.points === 3).length
+  const played = (predictions ?? []).length
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-4 pb-4">
