@@ -204,10 +204,18 @@ export default function MatchList({ groups, groupMatches, koMatches, userId }: P
   const [selectedGroup, setSelectedGroup] = useState<string>(initialGroup)
   const groupLetters = groupMatches.map(k => k.replace('group_', ''))
   const [predCache, setPredCache] = useState<Record<string, CachedPred>>({})
+  const [visibleUpcoming, setVisibleUpcoming] = useState(5)
 
   const handleSaved = useCallback((matchId: string, home: number, away: number) => {
     setPredCache(prev => ({ ...prev, [matchId]: { home, away } }))
   }, [])
+
+  // Todos los partidos no terminados, ordenados por fecha
+  const upcomingMatches = Object.values(groups).flat()
+    .filter(m => m.status !== 'finished')
+    .sort((a, b) => new Date(a.match_date ?? '').getTime() - new Date(b.match_date ?? '').getTime())
+    // dedup por id
+    .filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i)
 
   return (
     <div>
@@ -282,6 +290,28 @@ export default function MatchList({ groups, groupMatches, koMatches, userId }: P
               </div>
             </section>
           ))}
+        </div>
+      )}
+
+      {/* Próximos partidos */}
+      {upcomingMatches.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            📅 Próximos partidos
+          </h2>
+          <div className="space-y-4">
+            {upcomingMatches.slice(0, visibleUpcoming).map(m => (
+              <MatchCard key={m.id} match={m} userId={userId} cachedPred={predCache[m.id]} onSaved={handleSaved} />
+            ))}
+          </div>
+          {visibleUpcoming < upcomingMatches.length && (
+            <button
+              onClick={() => setVisibleUpcoming(v => v + 5)}
+              className="w-full mt-4 py-3 rounded-2xl font-black text-sm active:scale-95 transition-all"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)' }}>
+              Ver más partidos ({upcomingMatches.length - visibleUpcoming} restantes)
+            </button>
+          )}
         </div>
       )}
     </div>
