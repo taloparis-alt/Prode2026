@@ -11,11 +11,15 @@ interface Props {
   existingTeamId: string | null
 }
 
+// 30 min antes del primer partido: MEX vs RSA, 11/06/2026 19:00 UTC
+const CHAMPION_DEADLINE = new Date('2026-06-11T18:30:00Z')
+
 export default function ChampionSection({ userId, teams, existingTeamId }: Props) {
   const [selected, setSelected] = useState(existingTeamId ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(!!existingTeamId)
-  const locked = saved
+  const deadlinePassed = new Date() >= CHAMPION_DEADLINE
+  const locked = saved || deadlinePassed
 
   const selectedTeam = teams.find(t => t.id === selected)
 
@@ -40,8 +44,10 @@ export default function ChampionSection({ userId, teams, existingTeamId }: Props
         <div className="flex items-center justify-between px-4 py-2.5"
           style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <span className="text-xs font-black uppercase tracking-wide">Campeón Mundial 2026</span>
-          {locked
+          {saved
             ? <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.2)', color: '#fbbf24' }}>🔒 FIJO</span>
+            : deadlinePassed
+            ? <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: 'rgba(248,113,113,0.2)', color: '#f87171' }}>🔒 CERRADO</span>
             : <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>ABIERTO</span>}
         </div>
 
@@ -56,6 +62,12 @@ export default function ChampionSection({ userId, teams, existingTeamId }: Props
                 <p className="text-xs" style={{ color: 'var(--muted)' }}>Tu candidato a campeón 🏆</p>
                 <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Aplica a todas tus ligas</p>
               </div>
+            </div>
+          ) : locked && !selectedTeam ? (
+            <div className="text-center py-3">
+              <p style={{ fontSize: 32 }}>🔒</p>
+              <p className="font-black text-sm mt-1" style={{ color: '#f87171' }}>Tiempo agotado</p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>El plazo para elegir campeón ya cerró</p>
             </div>
           ) : (
             <>
@@ -80,7 +92,7 @@ export default function ChampionSection({ userId, teams, existingTeamId }: Props
                 {saving ? '⏳ Guardando...' : '🏆 Guardar candidato'}
               </button>
               <p className="text-center text-[10px] mt-2" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                ⚠️ No se puede cambiar una vez guardado · Aplica a todas tus ligas
+                ⚠️ No se puede cambiar una vez guardado · Cierra el 11/06 a las 15:30hs
               </p>
             </>
           )}
