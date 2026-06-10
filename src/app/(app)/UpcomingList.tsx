@@ -18,7 +18,7 @@ export default function UpcomingList({ matches, predictions }: { matches: Match[
         {matches.slice(0, visible).map((match: Match) => {
           const pred = predMap.get(match.id)
           return (
-            <Link key={match.id} href={`/partidos?grupo=${match.group_letter}`} style={{ textDecoration: 'none' }}>
+            <Link key={match.id} href={match.group_letter ? `/partidos?grupo=${match.group_letter}` : '/partidos'} style={{ textDecoration: 'none' }}>
               <div style={{
                 background: 'rgba(255,255,255,0.07)', border: `1px solid ${pred ? 'rgba(56,189,248,0.4)' : 'rgba(255,255,255,0.1)'}`,
                 borderRadius: 18, overflow: 'hidden',

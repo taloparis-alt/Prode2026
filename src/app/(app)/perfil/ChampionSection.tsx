@@ -27,8 +27,9 @@ export default function ChampionSection({ userId, teams, existingTeamId }: Props
     if (!selected || locked) return
     setSaving(true)
     const supabase = createClient()
-    await supabase.from('user_champion_picks').upsert({ user_id: userId, team_id: selected })
+    const { error } = await supabase.from('user_champion_picks').upsert({ user_id: userId, team_id: selected })
     setSaving(false)
+    if (error) { alert('Error al guardar, intentá de nuevo'); return }
     setSaved(true)
   }
 

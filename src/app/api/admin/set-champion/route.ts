@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
     await admin
       .from('user_champion_picks')
       .update({ points: 0 })
-      .neq('team_id', teamId)
       .is('points', null)
 
     return NextResponse.json({ ok: true, rewarded: (picks ?? []).length })
