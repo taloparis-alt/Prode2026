@@ -9,11 +9,14 @@ import ClosingWarning from '@/components/ClosingWarning'
 import LocalTime from '@/components/LocalTime'
 
 const STAGE_LABELS: Record<string, string> = {
-  r32: '⚡ Octavos de Final',
-  r16: '⚡ Cuartos de Final',
-  sf: '🔥 Semifinales',
+  r32: '⚡ Dieciseisavos de Final',
+  r16: '⚡ Octavos de Final',
+  qf:  '⚡ Cuartos de Final',
+  sf:  '🔥 Semifinales',
+  third: '🥉 Tercer Puesto',
   final: '🏆 Final',
 }
+const STAGE_ORDER = ['r32','r16','qf','sf','third','final']
 
 function ScoreInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
@@ -280,7 +283,7 @@ export default function MatchList({ groups, groupMatches, koMatches, userId }: P
               <p className="font-black text-base mt-3">Se define al terminar la fase de grupos</p>
               <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Del 28 de junio en adelante</p>
             </div>
-          ) : koMatches.map(key => (
+          ) : [...koMatches].sort((a,b) => STAGE_ORDER.indexOf(a) - STAGE_ORDER.indexOf(b)).map(key => (
             <section key={key}>
               <h2 className="text-sm font-black uppercase tracking-widest mb-3" style={{ color: 'var(--accent3)' }}>
                 {STAGE_LABELS[key] ?? key}
