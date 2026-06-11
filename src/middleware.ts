@@ -26,18 +26,20 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/registro') ||
     request.nextUrl.pathname.startsWith('/recuperar') ||
-    request.nextUrl.pathname.startsWith('/nueva-contrasena') ||
-    request.nextUrl.pathname.startsWith('/api/join') ||
-    request.nextUrl.pathname.startsWith('/api/admin')
+    request.nextUrl.pathname.startsWith('/nueva-contrasena')
 
-  if (!user && !isAuthPage) {
+  const isPublicApi = request.nextUrl.pathname.startsWith('/api/join') ||
+    request.nextUrl.pathname.startsWith('/api/admin') ||
+    request.nextUrl.pathname.startsWith('/api/remove-member')
+
+  if (!user && !isAuthPage && !isPublicApi) {
     const redirectTo = request.nextUrl.pathname + request.nextUrl.search
     const loginUrl = new URL('/registro', request.url)
     loginUrl.searchParams.set('redirect', redirectTo)
     return NextResponse.redirect(loginUrl)
   }
 
-  if (user && isAuthPage) {
+  if (user && isAuthPage && !isPublicApi) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
