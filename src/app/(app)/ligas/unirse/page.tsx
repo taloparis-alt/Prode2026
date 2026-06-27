@@ -17,13 +17,19 @@ function UnirseForms() {
     if (!c) return
     setCode(c.toUpperCase())
 
-    // Si ya es miembro, ir directo a la liga
     async function checkMembership() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data: league } = await supabase.from('leagues').select('id').eq('code', (c as string).toUpperCase()).single()
       if (!league) return
+
+      // Si fue eliminado de la liga, no puede volver a unirse
+      const { data: ban } = await supabase.from('league_bans')
+        .select('user_id').eq('league_id', league.id).eq('user_id', user.id).maybeSingle()
+      if (ban) { setError('Fuiste eliminado de esta liga y no podés volver a unirte.'); return }
+
+      // Si ya es miembro, ir directo a la liga
       const { data: member } = await supabase.from('league_members')
         .select('user_id').eq('league_id', league.id).eq('user_id', user.id).single()
       if (member) router.replace(`/ligas/${league.id}`)
@@ -41,8 +47,18 @@ function UnirseForms() {
     const { data: league } = await supabase.from('leagues').select('id').eq('code', code.toUpperCase()).single()
     if (!league) { setError('Código inválido'); setLoading(false); return }
 
+    // Si fue eliminado de la liga, no puede volver a unirse
+    const { data: ban } = await supabase.from('league_bans')
+      .select('user_id').eq('league_id', league.id).eq('user_id', user.id).maybeSingle()
+    if (ban) { setError('Fuiste eliminado de esta liga y no podés volver a unirte.'); setLoading(false); return }
+
     const { error: err } = await supabase.from('league_members').insert({ league_id: league.id, user_id: user.id })
-    if (err && err.code !== '23505') { setError('No se pudo unir'); setLoading(false); return }
+    if (err && err.code !== '23505') {
+      const msg = err.message?.includes('BANNED')
+        ? 'Fuiste eliminado de esta liga y no podés volver a unirte.'
+        : 'No se pudo unir'
+      setError(msg); setLoading(false); return
+    }
 
     router.push(`/ligas/${league.id}`)
   }

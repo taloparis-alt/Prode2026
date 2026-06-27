@@ -15,6 +15,16 @@ export async function GET(request: NextRequest) {
 
   if (!league) redirect('/ligas')
 
+  // Si el usuario fue eliminado de esta liga, no puede volver a unirse
+  const { data: ban } = await supabase
+    .from('league_bans')
+    .select('user_id')
+    .eq('league_id', league.id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (ban) redirect(`/ligas/unirse?codigo=${codigo}&bloqueado=1`)
+
   await supabase.from('league_members')
     .insert({ league_id: league.id, user_id: user.id })
     .select()

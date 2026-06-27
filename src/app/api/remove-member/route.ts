@@ -30,6 +30,13 @@ export async function POST(request: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+    // Bloquear al usuario para que no pueda volver a unirse con el código
+    const { error: banError } = await admin
+      .from('league_bans')
+      .upsert({ league_id: leagueId, user_id: userId }, { onConflict: 'league_id,user_id' })
+
+    if (banError) return NextResponse.json({ error: banError.message }, { status: 500 })
+
     return NextResponse.json({ ok: true })
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 })
