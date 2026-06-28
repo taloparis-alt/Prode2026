@@ -16,6 +16,7 @@ interface Match {
   group_letter: string | null
   stage: string
   sort_order: number
+  winner_team_id: string | null
 }
 
 const KO_ROUNDS: { key: string; label: string }[] = [
@@ -33,8 +34,11 @@ function MatchRow({ match }: { match: Match }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  const [winner, setWinner] = useState<string | null>(match.winner_team_id ?? null)
 
   const isFinished = match.status === 'finished'
+  const isKo = match.stage !== 'group'
+  const needWinner = isKo && homeScore === awayScore   // empate en eliminatoria => penales
   const date = new Date(match.match_date).toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })
 
   async function handleSave() {
@@ -42,7 +46,7 @@ function MatchRow({ match }: { match: Match }) {
     const res = await fetch('/api/admin/update-match', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ matchId: match.id, homeScore, awayScore }),
+      body: JSON.stringify({ matchId: match.id, homeScore, awayScore, winnerTeamId: needWinner ? winner : null }),
     })
     const data = await res.json()
     setSaving(false)
@@ -97,6 +101,36 @@ function MatchRow({ match }: { match: Match }) {
           {saving ? '...' : saved ? '✓' : 'Guardar'}
         </button>
       </div>
+
+      {/* Empate en eliminatoria: definir quién avanzó por penales */}
+      {needWinner && (
+        <div style={{ marginTop: 10, padding: '8px 10px', borderRadius: 10, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)' }}>
+          <p style={{ fontSize: 10, fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 6px' }}>
+            Empate · ¿Quién avanzó por penales?
+          </p>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[{ id: match.home_team_id, name: match.home_team.name }, { id: match.away_team_id, name: match.away_team.name }].map(({ id, name }) => {
+              const sel = winner === id
+              return (
+                <button key={id} onClick={() => setWinner(id)}
+                  style={{
+                    flex: 1, padding: '7px 8px', borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase',
+                    background: sel ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : 'rgba(255,255,255,0.06)',
+                    border: sel ? '1px solid transparent' : '1px solid rgba(255,255,255,0.15)',
+                    color: sel ? '#000' : 'rgba(255,255,255,0.7)',
+                  }}>
+                  {sel ? '✓ ' : ''}{name}
+                </button>
+              )
+            })}
+          </div>
+          {!winner && (
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', margin: '6px 0 0' }}>
+              Elegí quién pasó para que se complete la llave siguiente.
+            </p>
+          )}
+        </div>
+      )}
 
       {error && <p style={{ color: '#f87171', fontSize: 11, marginTop: 6, marginBottom: 0 }}>{error}</p>}
     </div>

@@ -12,7 +12,7 @@ function calcPoints(predHome: number, predAway: number, realHome: number, realAw
 
 export async function POST(request: NextRequest) {
   try {
-    const { matchId, homeScore, awayScore } = await request.json()
+    const { matchId, homeScore, awayScore, winnerTeamId } = await request.json()
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -26,10 +26,16 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Actualizar el partido
+    // Actualizar el partido. winner_team_id solo se toca cuando hay un ganador
+    // por penales que registrar (empate en eliminatoria), así no se referencia
+    // la columna en el resto de los casos.
+    const matchUpdate: Record<string, unknown> = { home_score: homeScore, away_score: awayScore, status: 'finished' }
+    if (homeScore === awayScore && winnerTeamId) {
+      matchUpdate.winner_team_id = winnerTeamId
+    }
     const { error: matchError } = await admin
       .from('matches')
-      .update({ home_score: homeScore, away_score: awayScore, status: 'finished' })
+      .update(matchUpdate)
       .eq('id', matchId)
 
     if (matchError) return NextResponse.json({ error: matchError.message }, { status: 500 })
