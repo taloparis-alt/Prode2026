@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { stageLabel } from '@/lib/stages'
 
 interface Match {
   id: string
@@ -16,6 +17,15 @@ interface Match {
   stage: string
   sort_order: number
 }
+
+const KO_ROUNDS: { key: string; label: string }[] = [
+  { key: 'r32',   label: '16avos' },
+  { key: 'r16',   label: 'Octavos' },
+  { key: 'qf',    label: 'Cuartos' },
+  { key: 'sf',    label: 'Semis' },
+  { key: 'third', label: '3er P.' },
+  { key: 'final', label: 'Final' },
+]
 
 function MatchRow({ match }: { match: Match }) {
   const [homeScore, setHomeScore] = useState(match.home_score ?? 0)
@@ -50,7 +60,7 @@ function MatchRow({ match }: { match: Match }) {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>
-          {match.stage === 'group' ? `Grupo ${match.group_letter}` : match.stage} · {date}
+          {stageLabel(match.stage, match.group_letter)} · {date}
         </span>
         {isFinished && (
           <span style={{ fontSize: 10, fontWeight: 900, color: '#22c55e', background: 'rgba(34,197,94,0.15)', padding: '2px 8px', borderRadius: 20 }}>✓ Finalizado</span>
@@ -93,6 +103,11 @@ function MatchRow({ match }: { match: Match }) {
   )
 }
 
+function counter(ms: Match[]): string {
+  const done = ms.filter(m => m.status === 'finished').length
+  return `${done}/${ms.length}`
+}
+
 export default function AdminMatchList({ matches }: { matches: Match[] }) {
   const groups = matches.filter(m => m.stage === 'group')
   const ko = matches.filter(m => m.stage !== 'group')
@@ -103,25 +118,83 @@ export default function AdminMatchList({ matches }: { matches: Match[] }) {
     if (!byGroup[k]) byGroup[k] = []
     byGroup[k].push(m)
   }
+  const groupLetters = Object.keys(byGroup).sort((a, b) => a.localeCompare(b))
+
+  const byRound: Record<string, Match[]> = {}
+  for (const m of ko) {
+    if (!byRound[m.stage]) byRound[m.stage] = []
+    byRound[m.stage].push(m)
+  }
+  const roundsAvail = KO_ROUNDS.filter(r => (byRound[r.key]?.length ?? 0) > 0)
+
+  const [tab, setTab] = useState<'groups' | 'ko'>('groups')
+  const [selGroup, setSelGroup] = useState<string>(groupLetters[0] ?? '')
+  const [selRound, setSelRound] = useState<string>(roundsAvail[0]?.key ?? 'r32')
+
+  const shown = tab === 'groups' ? (byGroup[selGroup] ?? []) : (byRound[selRound] ?? [])
 
   return (
     <div>
-      {Object.entries(byGroup).sort(([a], [b]) => a.localeCompare(b)).map(([letter, ms]) => (
-        <div key={letter} style={{ marginBottom: 20 }}>
-          <h2 style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>
-            Grupo {letter}
-          </h2>
-          {ms.map(m => <MatchRow key={m.id} match={m} />)}
-        </div>
-      ))}
-      {ko.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <h2 style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>
-            Eliminatorias
-          </h2>
-          {ko.map(m => <MatchRow key={m.id} match={m} />)}
-        </div>
-      )}
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14, padding: 4, borderRadius: 16, background: 'rgba(0,0,0,0.25)' }}>
+        {([['groups', '🌎 Grupos'], ['ko', '⚡ Eliminatorias']] as const).map(([key, label]) => {
+          const active = tab === key
+          return (
+            <button key={key} onClick={() => setTab(key)}
+              style={{
+                flex: 1, padding: '10px 0', borderRadius: 12, fontWeight: 900, fontSize: 13, border: 'none', cursor: 'pointer',
+                background: active ? (key === 'groups' ? 'linear-gradient(135deg, #3b82f6, #6366f1)' : 'linear-gradient(135deg, #f59e0b, #ef4444)') : 'transparent',
+                color: active ? '#fff' : 'rgba(255,255,255,0.45)',
+              }}>
+              {label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Pills */}
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 12, marginBottom: 14 }}>
+        {tab === 'groups'
+          ? groupLetters.map(letter => {
+              const active = selGroup === letter
+              return (
+                <button key={letter} onClick={() => setSelGroup(letter)}
+                  style={{
+                    flexShrink: 0, minWidth: 52, padding: '8px 6px', borderRadius: 14, cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                    background: active ? 'linear-gradient(135deg, #3b82f6, #6366f1)' : 'rgba(255,255,255,0.06)',
+                    border: active ? '1px solid transparent' : '1px solid rgba(255,255,255,0.1)',
+                    color: active ? '#fff' : 'rgba(255,255,255,0.5)',
+                  }}>
+                  <span style={{ fontSize: 16, fontWeight: 900, lineHeight: 1 }}>{letter}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700 }}>{counter(byGroup[letter])}</span>
+                </button>
+              )
+            })
+          : roundsAvail.length === 0
+            ? <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', padding: '8px 4px' }}>Todavía no hay eliminatorias cargadas.</span>
+            : roundsAvail.map(({ key, label }) => {
+                const active = selRound === key
+                return (
+                  <button key={key} onClick={() => setSelRound(key)}
+                    style={{
+                      flexShrink: 0, padding: '8px 14px', borderRadius: 14, cursor: 'pointer', whiteSpace: 'nowrap',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                      background: active ? 'linear-gradient(135deg, #f59e0b, #ef4444)' : 'rgba(255,255,255,0.06)',
+                      border: active ? '1px solid transparent' : '1px solid rgba(255,255,255,0.1)',
+                      color: active ? '#fff' : 'rgba(255,255,255,0.5)',
+                    }}>
+                    <span style={{ fontSize: 13, fontWeight: 900, lineHeight: 1 }}>{label}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700 }}>{counter(byRound[key])}</span>
+                  </button>
+                )
+              })}
+      </div>
+
+      {/* Partidos del segmento seleccionado */}
+      <div>
+        {shown.map(m => <MatchRow key={m.id} match={m} />)}
+      </div>
     </div>
   )
 }
