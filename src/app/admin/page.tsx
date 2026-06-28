@@ -16,6 +16,7 @@ export default async function AdminPage() {
     .from('matches')
     .select('*, home_team:teams!home_team_id(name), away_team:teams!away_team_id(name)')
     .neq('home_team_id', 'TBD')
+    .order('match_date', { ascending: true })
     .order('sort_order', { ascending: true })
 
   const { data: teams } = await supabase

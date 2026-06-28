@@ -11,6 +11,7 @@ export default async function PartidosPage() {
   const { data: matches } = await supabase
     .from('matches')
     .select('*, home_team:teams!home_team_id(*), away_team:teams!away_team_id(*)')
+    .order('match_date', { ascending: true })
     .order('sort_order', { ascending: true })
 
   const { data: predictions } = await supabase
