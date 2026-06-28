@@ -25,7 +25,7 @@ function MatchRow({ match }: { match: Match }) {
   const [error, setError] = useState('')
 
   const isFinished = match.status === 'finished'
-  const date = new Date(match.match_date).toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const date = new Date(match.match_date).toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })
 
   async function handleSave() {
     setSaving(true); setError(''); setSaved(false)

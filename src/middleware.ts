@@ -39,7 +39,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  if (user && isAuthPage && !isPublicApi) {
+  // No expulsar de /nueva-contrasena: la recuperación crea una sesión temporal
+  // y el usuario necesita quedarse para fijar la contraseña nueva.
+  const isRecovery = request.nextUrl.pathname.startsWith('/nueva-contrasena')
+
+  if (user && isAuthPage && !isPublicApi && !isRecovery) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
