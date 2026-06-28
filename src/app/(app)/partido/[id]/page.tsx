@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import PredictionForm from './PredictionForm'
 import LocalTime from '@/components/LocalTime'
+import { stageLabel } from '@/lib/stages'
 
 export default async function PartidoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -26,12 +27,6 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
   deadline.setMinutes(deadline.getMinutes() - 30)
   const isLocked = new Date() >= deadline || match.status === 'finished'
 
-  const STAGE_LABELS: Record<string, string> = {
-    group: `Grupo ${match.group_letter}`,
-    r32: 'Octavos de Final', r16: 'Cuartos de Final',
-    sf: 'Semifinal', final: 'Final',
-  }
-
   return (
     <div className="relative min-h-dvh">
       {/* Background decorativo */}
@@ -52,7 +47,7 @@ export default async function PartidoPage({ params }: { params: Promise<{ id: st
           style={{ background: 'linear-gradient(135deg, rgba(79,142,247,0.2), rgba(251,191,36,0.1))', border: '1px solid var(--border)' }}>
           <span className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4"
             style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--muted)' }}>
-            {STAGE_LABELS[match.stage] ?? match.stage}
+            {stageLabel(match.stage, match.group_letter)}
           </span>
 
           <div className="flex items-center justify-center gap-4 mb-4">

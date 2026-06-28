@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import TeamFlag from '@/components/TeamFlag'
 import LocalTime from '@/components/LocalTime'
+import { stageLabel } from '@/lib/stages'
 import type { Match } from '@/lib/types'
 
 interface Pred { match_id: string; home_score: number; away_score: number }
@@ -24,7 +25,7 @@ export default function UpcomingList({ matches, predictions }: { matches: Match[
                 borderRadius: 18, overflow: 'hidden',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 14px', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent3)', textTransform: 'uppercase', letterSpacing: 1 }}>Grupo {match.group_letter}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent3)', textTransform: 'uppercase', letterSpacing: 1 }}>{stageLabel(match.stage, match.group_letter)}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {pred && <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)' }}>✓</span>}
                     <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}><LocalTime dateStr={match.match_date} /></span>

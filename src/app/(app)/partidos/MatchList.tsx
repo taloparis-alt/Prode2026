@@ -7,6 +7,7 @@ import type { Match } from '@/lib/types'
 import TeamFlag from '@/components/TeamFlag'
 import ClosingWarning from '@/components/ClosingWarning'
 import LocalTime from '@/components/LocalTime'
+import { stageLabel } from '@/lib/stages'
 
 const STAGE_LABELS: Record<string, string> = {
   r32: '⚡ Dieciseisavos de Final',
@@ -17,6 +18,14 @@ const STAGE_LABELS: Record<string, string> = {
   final: '🏆 Final',
 }
 const STAGE_ORDER = ['r32','r16','qf','sf','third','final']
+const KO_ROUNDS: { key: string; label: string }[] = [
+  { key: 'r32',   label: '16avos' },
+  { key: 'r16',   label: 'Octavos' },
+  { key: 'qf',    label: 'Cuartos' },
+  { key: 'sf',    label: 'Semis' },
+  { key: 'third', label: '3er Puesto' },
+  { key: 'final', label: 'Final' },
+]
 
 function ScoreInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
@@ -119,9 +128,14 @@ function MatchCard({ match, userId, cachedPred, onSaved }: {
       {/* Cabecera */}
       <div className="flex items-center justify-between px-4 py-2.5"
         style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          <LocalTime dateStr={match.match_date ?? ''} />
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--accent3)' }}>
+            {stageLabel(match.stage, match.group_letter)}
+          </span>
+          <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <LocalTime dateStr={match.match_date ?? ''} />
+          </span>
+        </div>
         {match.status === 'finished' && (
           <span className="text-[10px] font-black px-2.5 py-1 rounded-full" style={{ background: 'rgba(34,197,94,0.2)', color: '#22c55e' }}>FINALIZADO</span>
         )}
@@ -205,6 +219,8 @@ export default function MatchList({ groups, groupMatches, koMatches, userId }: P
     : groupMatches[0] ?? ''
   const [activeTab, setActiveTab] = useState<'groups' | 'ko'>('groups')
   const [selectedGroup, setSelectedGroup] = useState<string>(initialGroup)
+  const koOrdered = [...koMatches].sort((a, b) => STAGE_ORDER.indexOf(a) - STAGE_ORDER.indexOf(b))
+  const [selectedKo, setSelectedKo] = useState<string>(koOrdered[0] ?? 'r32')
   const groupLetters = groupMatches.map(k => k.replace('group_', ''))
   const [predCache, setPredCache] = useState<Record<string, CachedPred>>({})
   const [visibleUpcoming, setVisibleUpcoming] = useState(5)
@@ -276,24 +292,50 @@ export default function MatchList({ groups, groupMatches, koMatches, userId }: P
       )}
 
       {activeTab === 'ko' && (
-        <div className="space-y-6">
-          {koMatches.length === 0 ? (
-            <div className="text-center py-16" style={{ color: 'var(--muted)' }}>
-              <p style={{ fontSize: 56 }}>⏳</p>
-              <p className="font-black text-base mt-3">Se define al terminar la fase de grupos</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Del 28 de junio en adelante</p>
-            </div>
-          ) : [...koMatches].sort((a,b) => STAGE_ORDER.indexOf(a) - STAGE_ORDER.indexOf(b)).map(key => (
-            <section key={key}>
+        <>
+          {/* Pills de ronda */}
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-5" style={{ scrollbarWidth: 'none' }}>
+            {KO_ROUNDS.map(({ key, label }) => {
+              const avail = (groups[key]?.length ?? 0) > 0
+              const isActive = selectedKo === key
+              return (
+                <button key={key} onClick={() => setSelectedKo(key)}
+                  className="flex-shrink-0 rounded-2xl transition-all active:scale-95"
+                  style={{
+                    minWidth: 64, padding: '10px 14px', fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap',
+                    background: isActive ? 'linear-gradient(135deg, #f59e0b, #ef4444)'
+                      : avail ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.03)',
+                    border: isActive ? '1px solid transparent' : '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: isActive ? '0 4px 16px rgba(245,158,11,0.4)' : 'none',
+                    color: isActive ? '#fff' : avail ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.25)',
+                  }}>
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Ronda seleccionada */}
+          {(groups[selectedKo]?.length ?? 0) > 0 ? (
+            <>
               <h2 className="text-sm font-black uppercase tracking-widest mb-3" style={{ color: 'var(--accent3)' }}>
-                {STAGE_LABELS[key] ?? key}
+                {STAGE_LABELS[selectedKo] ?? selectedKo}
               </h2>
               <div className="space-y-4">
-                {groups[key].map(m => <MatchCard key={m.id} match={m} userId={userId} cachedPred={predCache[m.id]} onSaved={handleSaved} />)}
+                {groups[selectedKo].map(m => <MatchCard key={m.id} match={m} userId={userId} cachedPred={predCache[m.id]} onSaved={handleSaved} />)}
               </div>
-            </section>
-          ))}
-        </div>
+            </>
+          ) : (
+            <div className="text-center py-16" style={{ color: 'var(--muted)' }}>
+              <p style={{ fontSize: 56 }}>⏳</p>
+              <p className="font-black text-base mt-3">
+                {selectedKo === 'r32'
+                  ? 'Se define al terminar la fase de grupos'
+                  : 'Se define cuando termine la ronda anterior'}
+              </p>
+            </div>
+          )}
+        </>
       )}
 
     </div>
